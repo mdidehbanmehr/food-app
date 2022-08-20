@@ -94,27 +94,10 @@ function App() {
     lng: number
   ): Promise<ResturantDistance[]> => {
     const resturants = await getDetail(lat, lng);
-    return await getDistance(resturants, lat, lng);
+    return getDistance(resturants, lat, lng);
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const resturants = async () => {
-    console.log(
-      await getResturants(geolocation.latitude, geolocation.longitude)
-    );
-    return await getResturants(geolocation.latitude, geolocation.longitude);
-  };
-  let resturantArray = resturants();
-  useEffect(() => {
-    console.log(
-      "latitude and longitude: ",
-      geolocation.latitude,
-      geolocation.longitude
-    );
-
-    resturantArray = resturants();
-    console.log(resturantArray);
-  }, [geolocation.latitude, geolocation.longitude, resturants]);
+  let resturants: ResturantDistance[];
 
   return (
     <>
@@ -124,11 +107,13 @@ function App() {
       />
       <div>
         <button
-          onClick={async () =>
-            console.log(
-              await getResturants(geolocation.latitude, geolocation.longitude)
-            )
-          }
+          onClick={async () => {
+            resturants = await getResturants(
+              geolocation.latitude,
+              geolocation.longitude
+            );
+            console.log(resturants);
+          }}
           className="Filter"
         >
           Filter
