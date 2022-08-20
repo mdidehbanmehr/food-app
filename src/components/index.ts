@@ -1,3 +1,3 @@
 export { HeaderBar } from "./Header";
 
-export { ResturantItem } from "./Card";
+export { ResturantItem } from "./ResturantItem";
