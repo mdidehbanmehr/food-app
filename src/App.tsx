@@ -1,9 +1,10 @@
 import { Row } from "antd";
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import React from "react";
+import axios from "axios";
+import React, { useEffect } from "react";
 import "./App.css";
 import { HeaderBar } from "./components/index";
 import { ResturantItem } from "./components/index";
+import useGeolocation from "react-hook-geolocation";
 
 interface Resturants {
   name: string;
@@ -13,7 +14,7 @@ interface Resturants {
     photo_reference: string;
     width: number;
   };
-
+  rating: number;
   lat: number;
   lng: number;
 }
@@ -24,17 +25,20 @@ interface ResturantDistance extends Resturants {
 }
 
 function App() {
-  const getPosition = (): Promise<GeolocationPosition> => {
-    return new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject);
-    });
-  };
+  const geolocation = useGeolocation();
+  useEffect(() => {
+    console.log(
+      "latitude and longitude: ",
+      geolocation.latitude,
+      geolocation.longitude
+    );
+  }, [geolocation.latitude, geolocation.longitude]);
 
   const getDetail = async (
-    currentLat: number,
-    currentLng: number
+    currentLat: number | undefined,
+    currentLng: number | undefined
   ): Promise<Resturants[]> => {
-    const proxyurl = "https://cors-anywhere.herokuapp.com/";
+    // const proxyurl = "https://cors-anywhere.herokuapp.com/";
     const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${currentLat}%2C${currentLng}&type=restaurant&rankby=distance&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`;
     let idProps = {
       method: "get",
@@ -48,6 +52,7 @@ function App() {
             return {
               name: resturant.name,
               photo: resturant.photos?.at(0),
+              rating: resturant.rating,
               lat: resturant.geometry?.location?.lat,
               lng: resturant.geometry?.location?.lng,
             };
@@ -63,7 +68,7 @@ function App() {
     resturants: Resturants[],
     currentLat: number,
     currentLng: number
-  ) => {
+  ): Promise<ResturantDistance[]> => {
     return await Promise.all(
       resturants.map(async (resturant) => {
         let test = async () => {
@@ -92,17 +97,9 @@ function App() {
     );
   };
 
-  const getResturants = async () => {
-    return await getPosition()
-      .then(async (position) => {
-        const currentLat = position.coords.latitude;
-        const currentLng = position.coords.longitude;
-        const resturants = await getDetail(currentLat, currentLng);
-        return await getDistance(resturants, currentLat, currentLng);
-      })
-      .catch((err) => {
-        return err;
-      });
+  const getResturants = async (lat: number, lng: number) => {
+    const resturants = await getDetail(lat, lng);
+    return await getDistance(resturants, lat, lng);
   };
 
   return (
@@ -113,7 +110,11 @@ function App() {
       />
       <div>
         <button
-          onClick={async () => console.log(await getResturants())}
+          onClick={async () =>
+            console.log(
+              await getResturants(geolocation.latitude, geolocation.longitude)
+            )
+          }
           className="Filter"
         >
           Filter
