@@ -1,6 +1,6 @@
 import { Row } from "antd";
 import axios from "axios";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import { HeaderBar } from "./components/index";
 import { ResturantItem } from "./components/index";
@@ -26,14 +26,6 @@ interface ResturantDistance extends Resturants {
 
 function App() {
   const geolocation = useGeolocation();
-  useEffect(() => {
-    console.log(
-      "latitude and longitude: ",
-      geolocation.latitude,
-      geolocation.longitude
-    );
-  }, [geolocation.latitude, geolocation.longitude]);
-
   const getDetail = async (
     currentLat: number | undefined,
     currentLng: number | undefined
@@ -42,7 +34,7 @@ function App() {
     const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${currentLat}%2C${currentLng}&type=restaurant&rankby=distance&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`;
     let idProps = {
       method: "get",
-      url: `${url}`,
+      url: url,
       headers: {},
     };
     return axios(idProps)
@@ -97,10 +89,32 @@ function App() {
     );
   };
 
-  const getResturants = async (lat: number, lng: number) => {
+  const getResturants = async (
+    lat: number,
+    lng: number
+  ): Promise<ResturantDistance[]> => {
     const resturants = await getDetail(lat, lng);
     return await getDistance(resturants, lat, lng);
   };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const resturants = async () => {
+    console.log(
+      await getResturants(geolocation.latitude, geolocation.longitude)
+    );
+    return await getResturants(geolocation.latitude, geolocation.longitude);
+  };
+  let resturantArray = resturants();
+  useEffect(() => {
+    console.log(
+      "latitude and longitude: ",
+      geolocation.latitude,
+      geolocation.longitude
+    );
+
+    resturantArray = resturants();
+    console.log(resturantArray);
+  }, [geolocation.latitude, geolocation.longitude, resturants]);
 
   return (
     <>
