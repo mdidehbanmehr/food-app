@@ -56,7 +56,6 @@ const getDistance = async (
     }
     url =
       url.slice(0, -3) + `&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`;
-    console.log(url);
 
     const { data }: { data: google.maps.DistanceMatrixResponse } = await get(
       url,
