@@ -5,3 +5,5 @@ export { ResturantItem } from "./ResturantItem";
 export { Conditional } from "./Conditional";
 
 export { SpinnerLoader } from "./SpinnerLoader";
+
+export { ResturantView } from "./ResturantView";
