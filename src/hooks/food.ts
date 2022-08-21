@@ -1,15 +1,14 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { useQuery } from "react-query";
+import { useQuery, UseQueryResult } from "react-query";
 
 interface Position {
-  latitude: number;
-  longitude: number;
+  latitude: number | undefined;
+  longitude: number | undefined;
 }
-interface DistanceMeasure {
-  currentLatitude: number;
-  currentLongitude: number;
-  destinationLatitude: number;
-  destinationLongitude: number;
+
+interface DestinationParams {
+  origin: Position;
+  destinations: Position[];
 }
 interface LocationResults
   extends Omit<google.maps.places.PlaceResult, "photos"> {
@@ -56,13 +55,28 @@ export const useGetResturants = (params: Position) => {
   return useQuery(["getResturants", params], () => getResturants(params));
 };
 
-const getDistance = async (params: DistanceMeasure) => {
-  const url = `distancematrix/json?origins=${params.currentLatitude}%2C${params.currentLongitude}&destinations=${params.destinationLatitude}%2C${params.destinationLongitude}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`;
-  const { data }: { data: responseNearby } = await get(url, {
-    params,
-  });
+const getDistance = async (params: DestinationParams) => {
+  let url = `distancematrix/json?origins=${params.origin.latitude}%2C${params.origin.longitude}&destinations=`;
+  // ${params.destinationLatitude}%2C${params.destinationLongitude}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`;
+  for (let i = 0; i < params.destinations.length; i++) {
+    url += `${params.destinations[i].latitude}%2C${params.destinations[i].longitude}%7C`;
+  }
+  url = url.slice(0, -2) + `&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`;
+  console.log(url);
+  const { data }: { data: google.maps.DistanceMatrixResponse } = await get(
+    url,
+    {
+      params,
+    }
+  );
   return data;
 };
-export const useGetDistance = (params: DistanceMeasure) => {
-  return useQuery(["getDistance", params], () => getDistance(params));
+export const useGetDistance = (params: DestinationParams) => {
+  return useQuery(
+    ["getDistance", params],
+    () => {
+      getDistance(params);
+    },
+    { enabled: !!params }
+  );
 };

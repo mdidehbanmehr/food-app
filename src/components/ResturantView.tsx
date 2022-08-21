@@ -1,11 +1,11 @@
 import { Row } from "antd";
 import React, { useState } from "react";
 import useGeolocation from "react-hook-geolocation";
-import { useGetResturants } from "../hooks/food";
+import { useGetDistance, useGetResturants } from "../hooks/food";
 import { StyleSheet } from "../models/StyleSheet";
 import { HeaderBar, SpinnerLoader, Conditional, ResturantItem } from "./index";
+
 export const ResturantView = () => {
-  const [buttonClick, setButtonClick] = useState(false);
   const geolocation = useGeolocation();
   const position = {
     latitude: geolocation.latitude,
@@ -13,16 +13,21 @@ export const ResturantView = () => {
   };
   const { data: resturantsNearby, isLoading } = useGetResturants(position);
 
-  const coordinationDiff = resturantsNearby?.results.slice(10).map((res) => {
+  const destinationCoords = resturantsNearby?.results.slice(10).map((res) => {
     return {
-      currentLatitude: geolocation.latitude,
-      currentLongitude: geolocation.longitude,
-      destinationLatitude: res.geometry?.location?.lat,
-      destinationLongitude: res.geometry?.location?.lng,
+      latitude: res.geometry?.location?.lat(),
+      longitude: res.geometry?.location?.lng(),
     };
   });
-  // console.log(resturantsNearby);
-  // const { data: resturantDistance, isLoading } = useGetResturants();
+  const destinationQueryParams = {
+    origin: position,
+    destinations: destinationCoords,
+  };
+  const { data: resturantDistance } = useGetDistance(
+    destinationQueryParams,
+  );
+  console.log(resturantDistance);
+
   return (
     <>
       <HeaderBar
