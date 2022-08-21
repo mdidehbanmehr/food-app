@@ -8,10 +8,11 @@ interface Position {
 
 interface DestinationParams {
   origin: Position;
-  destinations: Position[];
+  destinations: Position[] | undefined;
 }
 interface LocationResults
-  extends Omit<google.maps.places.PlaceResult, "photos"> {
+  extends Omit<google.maps.places.PlaceResult, "photos" | "geometry"> {
+  geometry: { location: { lat: number; lng: number } };
   photos: {
     height: number;
     html_attributions: object;
@@ -25,13 +26,6 @@ interface responseNearby {
   results: LocationResults[];
   status: string;
 }
-
-// interface responseDistance {
-//   html_attributions: string[];
-//   next_page_token: string;
-//   results: google.maps.places.PlaceResult[];
-//   status: string;
-// }
 const API = axios.create({
   baseURL: "https://maps.googleapis.com/maps/api/",
   timeout: 10000,
@@ -51,32 +45,48 @@ const getResturants = async (params: Position) => {
   });
   return data;
 };
-export const useGetResturants = (params: Position) => {
-  return useQuery(["getResturants", params], () => getResturants(params));
+
+const getDistance = async (
+  params: DestinationParams
+): Promise<google.maps.DistanceMatrixResponse> => {
+  let url = `distancematrix/json?origins=${params.origin.latitude}%2C${params.origin.longitude}&destinations=`;
+  if (params.destinations) {
+    for (let i = 0; i < params.destinations.length; i++) {
+      url += `${params.destinations[i].latitude}%2C${params.destinations[i].longitude}%7C`;
+    }
+    url =
+      url.slice(0, -3) + `&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`;
+    console.log(url);
+
+    const { data }: { data: google.maps.DistanceMatrixResponse } = await get(
+      url,
+      {
+        params,
+      }
+    );
+    return data;
+  }
+  return Promise.reject(new Error("No location"));
 };
 
-const getDistance = async (params: DestinationParams) => {
-  let url = `distancematrix/json?origins=${params.origin.latitude}%2C${params.origin.longitude}&destinations=`;
-  // ${params.destinationLatitude}%2C${params.destinationLongitude}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`;
-  for (let i = 0; i < params.destinations.length; i++) {
-    url += `${params.destinations[i].latitude}%2C${params.destinations[i].longitude}%7C`;
-  }
-  url = url.slice(0, -2) + `&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`;
-  console.log(url);
-  const { data }: { data: google.maps.DistanceMatrixResponse } = await get(
-    url,
-    {
-      params,
-    }
+export const useGetResturants = (params: Position) => {
+  const { data: resturantsNearby } = useQuery(["getResturants", params], () =>
+    getResturants(params)
   );
-  return data;
-};
-export const useGetDistance = (params: DestinationParams) => {
-  return useQuery(
-    ["getDistance", params],
-    () => {
-      getDistance(params);
-    },
-    { enabled: !!params }
+  const destinationCoords = resturantsNearby?.results.slice(10).map((res) => {
+    return {
+      latitude: res.geometry?.location?.lat,
+      longitude: res.geometry?.location?.lng,
+    };
+  });
+  const destinationQueryParams = {
+    origin: params,
+    destinations: destinationCoords,
+  };
+  const { data: resturantDistance, isLoading } = useQuery(
+    ["getDistance", destinationQueryParams],
+    () => getDistance(destinationQueryParams)
   );
+
+  return { ...resturantsNearby, ...resturantDistance, isLoading };
 };
