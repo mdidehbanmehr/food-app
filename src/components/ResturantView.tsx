@@ -12,8 +12,17 @@ export const ResturantView = () => {
     longitude: geolocation.longitude,
   };
   const { data: resturantsNearby, isLoading } = useGetResturants(position);
-  console.log(resturantsNearby?.results);
+
+  const coordinationDiff = resturantsNearby?.results.slice(10).map((res) => {
+    return {
+      currentLatitude: geolocation.latitude,
+      currentLongitude: geolocation.longitude,
+      destinationLatitude: res.geometry?.location?.lat,
+      destinationLongitude: res.geometry?.location?.lng,
+    };
+  });
   // console.log(resturantsNearby);
+  // const { data: resturantDistance, isLoading } = useGetResturants();
   return (
     <>
       <HeaderBar
@@ -36,12 +45,12 @@ export const ResturantView = () => {
           falseRender={
             <>
               {resturantsNearby?.results &&
-                resturantsNearby.results?.map((resturant) => {
-                  console.log(resturant.name);
+                resturantsNearby.results?.slice(10).map((resturant) => {
+                  console.log(resturant.photos[0].photo_reference);
                   return (
                     <ResturantItem
                       name={resturant.name ?? ""}
-                      photo_ref={null}
+                      photo_ref={resturant.photos[0].photo_reference}
                       distance={""}
                     />
                   );
