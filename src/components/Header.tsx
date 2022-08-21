@@ -21,14 +21,14 @@ export const HeaderBar = ({
 const styles = StyleSheet.create({
   topBar: {
     margin: "0px -24px",
-    background: "#07285D",
+    background: "#365956",
   },
   topBarContainer: {
     padding: "32px 160px",
   },
   topBarHeader: {
     color: "white",
-    fontFamily: "D-DIN",
+    fontFamily: "Varela Round, Sans-serif",
     fontStyle: "normal",
     fontWeight: "700",
     fontSize: "32px",
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   },
   topBarText: {
     color: "white",
-    fontFamily: "D-DIN",
+    fontFamily: "Varela Round, Sans-serif",
     fontStyle: "normal",
     fontWeight: "400",
     fontSize: "16px",

@@ -1,42 +1,69 @@
-import { Card, Row } from "antd";
+import { Card, Carousel, Rate, Badge } from "antd";
+import Meta from "antd/lib/card/Meta";
 import React from "react";
+import { StyleSheet } from "../models/StyleSheet";
 
-const { Meta } = Card;
+// const { Meta } = Card;
+const onChange = (currentSlide: number) => {};
 
 export const ResturantItem = ({
   name,
-  photo_ref,
+  rating,
+  reviewCount,
+  photos,
   distance,
 }: {
   name: string;
-  photo_ref: string | null;
+  rating: number;
+  reviewCount: number;
+  photos: {
+    height: number | null;
+    html_attributions: object | null;
+    photo_reference: string | null;
+    width: number | null;
+  }[];
   distance: string;
 }) => {
   return (
     <Card
-      style={{
-        width: "15%",
-        marginBottom: "100px",
-        border: "2px solid #dadee0",
-        marginLeft: "50px",
-      }}
+      style={styles.card}
       cover={
-        photo_ref ? (
-          <img
-            style={{ height: "200px", width: "100%", objectFit: "cover" }}
-            alt="example"
-            src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=300
-          &photoreference=${photo_ref}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`}
-          />
-        ) : (
-          <img
-            alt="example"
-            src="https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png"
-          />
-        )
+        <Badge.Ribbon text={`${reviewCount} Reviews`}>
+          {/* <Carousel afterChange={onChange}> */}
+          {photos.map((item) => {
+            return item.photo_reference ? (
+              <img
+                style={styles.image}
+                alt="example"
+                src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=300&photoreference=${item.photo_reference}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`}
+              />
+            ) : (
+              <div>
+                <img alt="resturant" src="https://picsum.photos/200/300" />
+              </div>
+            );
+          })}
+          {/* </Carousel> */}
+        </Badge.Ribbon>
       }
     >
       <Meta title={name} description={distance} />
+      <Rate disabled defaultValue={rating} />
     </Card>
   );
 };
+
+const styles = StyleSheet.create({
+  image: {
+    height: "200px",
+    width: "100%",
+    objectFit: "cover",
+  },
+  card: {
+    width: "300px",
+    minWidth: "200px",
+    marginBottom: "100px",
+    border: "2px solid #dadee0",
+    margin: "30px 25px",
+  },
+});
